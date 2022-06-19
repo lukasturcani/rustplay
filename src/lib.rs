@@ -1,5 +1,6 @@
 use std::vec::Vec;
 
+pub mod physics;
 pub mod vec3;
 
 pub fn loop_integrate(time_step: f64, positions: &[f64], velocities: &[f64]) -> Vec<f64> {

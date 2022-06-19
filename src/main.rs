@@ -6,6 +6,7 @@ use kiss3d::window::Window;
 use itertools::izip;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use rustplay::physics::{self, PhysicsConfig, PhysicsData};
 use std::{thread, time};
 
 fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
@@ -21,54 +22,6 @@ fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
     window.draw_line(&Point3::new(0., 0., z), &Point3::new(0., y, z), color);
     window.draw_line(&Point3::new(x, 0., z), &Point3::new(x, y, z), color);
     window.draw_line(&Point3::new(x, y, z), &Point3::new(0., y, z), color);
-}
-
-struct PhysicsData {
-    positions_x: Vec<f64>,
-    positions_y: Vec<f64>,
-    positions_z: Vec<f64>,
-    velocities_x: Vec<f64>,
-    velocities_y: Vec<f64>,
-    velocities_z: Vec<f64>,
-}
-
-fn get_random_physics_data(
-    generator: &mut impl rand::Rng,
-    num_objects: u64,
-    max_position_x: f64,
-    max_position_y: f64,
-    max_position_z: f64,
-    max_velocity_x: f64,
-    max_velocity_y: f64,
-    max_velocity_z: f64,
-) -> PhysicsData {
-    PhysicsData {
-        positions_x: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_position_x)
-            .collect(),
-        positions_y: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_position_y)
-            .collect(),
-        positions_z: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_position_z)
-            .collect(),
-        velocities_x: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_velocity_x)
-            .collect(),
-        velocities_y: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_velocity_y)
-            .collect(),
-        velocities_z: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_velocity_z)
-            .collect(),
-    }
-}
-
-struct PhysicsConfig {
-    time_step: f64,
-    max_x: f64,
-    max_y: f64,
-    max_z: f64,
 }
 
 fn take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
@@ -121,7 +74,7 @@ fn main() {
     let max_velocity: f64 = 2.;
     let draw_frequency = time::Duration::from_millis(15);
     let num_spheres = 50;
-    let mut physics_spheres = get_random_physics_data(
+    let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
         num_spheres,
         physics_config.max_x,
