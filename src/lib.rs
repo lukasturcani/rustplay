@@ -40,16 +40,16 @@ pub fn loop_apply_bounds<'a>(
     positions
 }
 
-
 pub fn iter_apply_bounds<'a>(
     min: f64,
     max: f64,
     velocities: &mut [f64],
     positions: &'a mut [f64],
 ) -> &'a mut [f64] {
-
-    positions.iter_mut().zip(velocities).for_each(
-        |(position, velocity)| {
+    positions
+        .iter_mut()
+        .zip(velocities)
+        .for_each(|(position, velocity)| {
             if *position < min {
                 *position = &min + &min - *position;
                 *velocity *= -1.0;
@@ -57,8 +57,7 @@ pub fn iter_apply_bounds<'a>(
                 *position = max + max - *position;
                 *velocity *= -1.0;
             }
-        }
-    );
+        });
     positions
 }
 
