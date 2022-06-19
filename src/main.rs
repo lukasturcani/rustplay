@@ -6,7 +6,7 @@ use kiss3d::window::Window;
 use itertools::izip;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use rustplay::physics::{self, PhysicsConfig, PhysicsData};
+use rustplay::physics::{self, PhysicsConfig};
 use std::{thread, time};
 
 fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
@@ -22,45 +22,6 @@ fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
     window.draw_line(&Point3::new(0., 0., z), &Point3::new(0., y, z), color);
     window.draw_line(&Point3::new(x, 0., z), &Point3::new(x, y, z), color);
     window.draw_line(&Point3::new(x, y, z), &Point3::new(0., y, z), color);
-}
-
-fn take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
-    data.positions_x = rustplay::iter_integrate(
-        config.time_step,
-        &data.velocities_x[..],
-        &data.positions_x[..],
-    )
-    .collect();
-    rustplay::iter_apply_bounds(
-        0.,
-        config.max_x,
-        &mut data.velocities_x[..],
-        &mut data.positions_x[..],
-    );
-    data.positions_y = rustplay::iter_integrate(
-        config.time_step,
-        &data.velocities_y[..],
-        &data.positions_y[..],
-    )
-    .collect();
-    rustplay::iter_apply_bounds(
-        0.,
-        config.max_y,
-        &mut data.velocities_y[..],
-        &mut data.positions_y[..],
-    );
-    data.positions_z = rustplay::iter_integrate(
-        config.time_step,
-        &data.velocities_z[..],
-        &data.positions_z[..],
-    )
-    .collect();
-    rustplay::iter_apply_bounds(
-        0.,
-        config.max_z,
-        &mut data.velocities_z[..],
-        &mut data.positions_z[..],
-    );
 }
 
 fn main() {
@@ -108,7 +69,7 @@ fn main() {
             physics_config.max_z as f32,
             &mut window,
         );
-        take_time_step(&physics_config, &mut physics_spheres);
+        physics::iter_take_time_step(&physics_config, &mut physics_spheres);
         rendered_spheres = izip!(
             rendered_spheres,
             &physics_spheres.positions_x,
