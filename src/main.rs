@@ -7,7 +7,6 @@ use itertools::izip;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rustplay::physics::{self, PhysicsConfig};
-use std::{thread, time};
 
 fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
     window.draw_line(&Point3::new(0., 0., 0.), &Point3::new(x, 0., 0.), color);
@@ -34,8 +33,7 @@ fn main() {
         sphere_radius: 1.,
     };
     let max_velocity: f64 = 1.;
-    let draw_frequency = time::Duration::from_millis(15);
-    let num_spheres = 50;
+    let num_spheres = 350;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
         num_spheres,
@@ -82,6 +80,5 @@ fn main() {
             sphere
         })
         .collect();
-        thread::sleep(draw_frequency);
     }
 }
