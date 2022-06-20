@@ -27,12 +27,13 @@ fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
 fn main() {
     let mut generator = StdRng::seed_from_u64(12);
     let physics_config = PhysicsConfig {
-        time_step: 1.,
-        max_x: 60.,
-        max_y: 60.,
-        max_z: 60.,
+        time_step: 0.1,
+        max_x: 30.,
+        max_y: 30.,
+        max_z: 30.,
+        sphere_radius: 1.,
     };
-    let max_velocity: f64 = 2.;
+    let max_velocity: f64 = 1.;
     let draw_frequency = time::Duration::from_millis(15);
     let num_spheres = 50;
     let mut physics_spheres = physics::get_random_physics_data(
@@ -52,7 +53,7 @@ fn main() {
         &physics_spheres.positions_z,
     )
     .map(|(x, y, z)| {
-        let mut sphere = window.add_sphere(1.0);
+        let mut sphere = window.add_sphere(physics_config.sphere_radius as f32);
         sphere.set_local_translation(Translation3::new(*x as f32, *y as f32, *z as f32));
         sphere.set_color(1.0, 0.0, 0.0);
         sphere
