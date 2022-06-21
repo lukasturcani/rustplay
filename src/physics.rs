@@ -121,7 +121,7 @@ fn sphere_collision_response(
     *vz2 = *vz2 + projection_z1 - projection_z2;
 }
 
-pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
+pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f64 {
     let positions_x: Vec<_> = iter_integrate(
         config.time_step,
         &data.velocities_x[..],
@@ -218,7 +218,7 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
         }
     });
 
-    match first_collision {
+    let time = match first_collision {
         Some(collision) => {
             data.positions_x = iter_integrate(
                 collision.1.time,
@@ -266,11 +266,13 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
                 &mut left_y[collision.0.sphere1],
                 &mut left_z[collision.0.sphere1],
             );
+            collision.1.time
         }
         None => {
             data.positions_x = positions_x;
             data.positions_y = positions_y;
             data.positions_z = positions_z;
+            config.time_step
         }
     };
 
@@ -292,6 +294,7 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
         &mut data.velocities_z[..],
         &mut data.positions_z[..],
     );
+    time
 }
 
 pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {

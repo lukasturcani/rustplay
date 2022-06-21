@@ -26,13 +26,13 @@ fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
 fn main() {
     let mut generator = StdRng::seed_from_u64(12);
     let physics_config = PhysicsConfig {
-        time_step: 0.1,
+        time_step: 0.0016,
         max_x: 30.,
         max_y: 30.,
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity: f64 = 1.;
+    let max_velocity: f64 = 20.;
     let num_spheres = 350;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
@@ -68,7 +68,10 @@ fn main() {
             physics_config.max_z as f32,
             &mut window,
         );
-        physics::iter_take_time_step(&physics_config, &mut physics_spheres);
+        let mut simulated_time = 0f64;
+        while simulated_time < 0.016 {
+            simulated_time += physics::iter_take_time_step(&physics_config, &mut physics_spheres);
+        }
         rendered_spheres = izip!(
             rendered_spheres,
             &physics_spheres.positions_x,
