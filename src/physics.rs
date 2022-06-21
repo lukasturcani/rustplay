@@ -522,7 +522,25 @@ pub mod bench {
         super::iter_integrate(time_step, &velocities, &positions)
     }
 
+    pub fn iter_apply_bounds<'a>(
+        min: f64,
+        max: f64,
+        velocities: &mut [f64],
+        positions: &'a mut [f64],
+    ) -> &'a mut [f64] {
+        super::iter_apply_bounds(min, max, velocities, positions)
+    }
+
     pub fn loop_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
         super::loop_integrate(time_step, &velocities, &positions)
+    }
+
+    pub fn loop_apply_bounds<'a>(
+        min: f64,
+        max: f64,
+        velocities: &mut [f64],
+        positions: &'a mut [f64],
+    ) -> &'a mut [f64] {
+        super::loop_apply_bounds(min, max, velocities, positions)
     }
 }
