@@ -22,8 +22,10 @@ criterion = "0.3"
 
 [[bench]]
 name = "iter"
+required-features = ["bench"]
 harness = false
 
 [[bench]]
 name = "loop"
+required-features = ["bench"]
 harness = false
