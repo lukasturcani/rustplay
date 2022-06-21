@@ -75,6 +75,26 @@ fn quadratic_root(a: f64, b: f64, c: f64) -> f64 {
     }
 }
 
+fn vector_sub(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> (f64, f64, f64) {
+    (x1 - x2, y1 - y2, z1 - z2)
+}
+
+fn vector_mul(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> (f64, f64, f64) {
+    (x1 * x2, y1 * y2, z1 * z2)
+}
+
+fn vector_sum_((x, y, z): (f64, f64, f64)) -> f64 {
+    return x + y + z;
+}
+
+fn vector_dot(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> f64 {
+    vector_sum_(vector_mul(x1, y1, z1, x2, y2, z2))
+}
+
+fn vector_dot_((x1, y1, z1): (f64, f64, f64), (x2, y2, z2): (f64, f64, f64)) -> f64 {
+    return vector_dot(x1, y1, z1, x2, y2, z2);
+}
+
 fn is_sphere_collision(
     r1: f64,
     px1: f64,
@@ -85,9 +105,7 @@ fn is_sphere_collision(
     py2: f64,
     pz2: f64,
 ) -> bool {
-    let x_diff = px2 - px1;
-    let y_diff = py2 - py1;
-    let z_diff = pz2 - pz1;
+    let (x_diff, y_diff, z_diff) = vector_sub(px2, py2, pz2, px1, py1, pz1);
     let distance_squared = x_diff * x_diff + y_diff * y_diff + z_diff * z_diff;
     let collision_distance = r1 + r2;
     distance_squared < collision_distance * collision_distance
@@ -109,16 +127,12 @@ fn sphere_collision_time(
     vy2: f64,
     vz2: f64,
 ) -> f64 {
-    let px_diff = px2 - px1;
-    let py_diff = py2 - py1;
-    let pz_diff = pz2 - pz1;
-    let vx_diff = vx2 - vx1;
-    let vy_diff = vy2 - vy1;
-    let vz_diff = vz2 - vz1;
-    let distance_squared = px_diff * px_diff + py_diff * py_diff + pz_diff * pz_diff;
-    let relative_speed_squared = vx_diff * vx_diff + vy_diff * vy_diff + vz_diff * vz_diff;
+    let (px_diff, py_diff, pz_diff) = vector_sub(px2, py2, pz2, px1, py1, pz1);
+    let (vx_diff, vy_diff, vz_diff) = vector_sub(vx2, vy2, vz2, vx1, vy1, vz1);
+    let distance_squared = vector_dot(px_diff, py_diff, pz_diff, px_diff, py_diff, pz_diff);
+    let relative_speed_squared = vector_dot(vx_diff, vy_diff, vz_diff, vx_diff, vy_diff, vz_diff);
     let collision_distance = r1 + r2;
-    let half_b = vx_diff * px_diff + vy_diff * py_diff + vz_diff * pz_diff;
+    let half_b = vector_dot(vx_diff, vy_diff, vz_diff, px_diff, py_diff, pz_diff);
     let c = distance_squared - collision_distance * collision_distance;
     quadratic_root(relative_speed_squared, half_b + half_b, c)
 }
@@ -276,10 +290,7 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
                 data.positions_y[collision.0.sphere2] - data.positions_y[collision.0.sphere1],
                 data.positions_z[collision.0.sphere2] - data.positions_z[collision.0.sphere1],
             );
-            let distance = (displacement.0 * displacement.0
-                + displacement.1 * displacement.1
-                + displacement.2 * displacement.2)
-                .sqrt();
+            let distance = vector_dot_(displacement, displacement).sqrt();
             let collision_normal = (
                 displacement.0 / distance,
                 displacement.1 / distance,
@@ -403,10 +414,7 @@ pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
             data.positions_y[first_collision.2] - data.positions_y[first_collision.1],
             data.positions_z[first_collision.2] - data.positions_z[first_collision.1],
         );
-        let distance = (displacement.0 * displacement.0
-            + displacement.1 * displacement.1
-            + displacement.2 * displacement.2)
-            .sqrt();
+        let distance = vector_dot_(displacement, displacement).sqrt();
         let collision_normal = (
             displacement.0 / distance,
             displacement.1 / distance,
@@ -466,11 +474,10 @@ fn iter_integrate<'a>(
     velocities: &'a [f64],
     positions: &'a [f64],
 ) -> impl Iterator<Item = f64> + 'a {
-    let time_step_ = time_step.clone();
     positions
         .iter()
         .zip(velocities)
-        .map(move |(position, velocity)| position + time_step_ * velocity)
+        .map(move |(position, velocity)| position + time_step * velocity)
 }
 
 fn loop_apply_bounds<'a>(
