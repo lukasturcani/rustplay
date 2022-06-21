@@ -70,7 +70,7 @@ fn main() {
         );
         let mut simulated_time = 0f64;
         while simulated_time < 0.016 {
-            simulated_time += physics::iter_take_time_step(&physics_config, &mut physics_spheres);
+            simulated_time += physics::mix_take_time_step(&physics_config, &mut physics_spheres);
         }
         rendered_spheres = izip!(
             rendered_spheres,
