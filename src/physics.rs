@@ -93,7 +93,6 @@ fn is_sphere_collision(
     distance_squared < collision_distance * collision_distance
 }
 
-
 fn sphere_collision_time(
     r1: f64,
     px1: f64,
@@ -349,8 +348,8 @@ pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
     );
 
     let mut first_collision = (f64::INFINITY, 0, 0);
-    for i1 in 0..positions_x.len()-1 {
-        for i2 in i1+1..positions_x.len() {
+    for i1 in 0..positions_x.len() - 1 {
+        for i2 in i1 + 1..positions_x.len() {
             if is_sphere_collision(
                 config.sphere_radius,
                 positions_x[i1],

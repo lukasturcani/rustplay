@@ -9,3 +9,14 @@ edition = "2021"
 kiss3d = "0.32"
 itertools = "0.10"
 rand = "0.8"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "iter_take_time_step"
+harness = false
+
+[[bench]]
+name = "loop_take_time_step"
+harness = false
