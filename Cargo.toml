@@ -29,3 +29,8 @@ harness = false
 name = "loop"
 required-features = ["bench"]
 harness = false
+
+[[bench]]
+name = "mix"
+required-features = ["bench"]
+harness = false
