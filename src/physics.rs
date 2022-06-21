@@ -75,7 +75,7 @@ fn quadratic_root(a: f64, b: f64, c: f64) -> f64 {
     }
 }
 
-fn sphere_collision(
+fn is_sphere_collision(
     r1: f64,
     px1: f64,
     py1: f64,
@@ -91,6 +91,37 @@ fn sphere_collision(
     let distance_squared = x_diff * x_diff + y_diff * y_diff + z_diff * z_diff;
     let collision_distance = r1 + r2;
     distance_squared < collision_distance * collision_distance
+}
+
+
+fn sphere_collision_time(
+    r1: f64,
+    px1: f64,
+    py1: f64,
+    pz1: f64,
+    vx1: f64,
+    vy1: f64,
+    vz1: f64,
+    r2: f64,
+    px2: f64,
+    py2: f64,
+    pz2: f64,
+    vx2: f64,
+    vy2: f64,
+    vz2: f64,
+) -> f64 {
+    let px_diff = px2 - px1;
+    let py_diff = py2 - py1;
+    let pz_diff = pz2 - pz1;
+    let vx_diff = vx2 - vx1;
+    let vy_diff = vy2 - vy1;
+    let vz_diff = vz2 - vz1;
+    let distance_squared = px_diff * px_diff + py_diff * py_diff + pz_diff * pz_diff;
+    let relative_speed_squared = vx_diff * vx_diff + vy_diff * vy_diff + vz_diff * vz_diff;
+    let collision_distance = r1 + r2;
+    let half_b = vx_diff * px_diff + vy_diff * py_diff + vz_diff * pz_diff;
+    let c = distance_squared - collision_distance * collision_distance;
+    quadratic_root(relative_speed_squared, half_b + half_b, c)
 }
 
 fn sphere_collision_response(
@@ -161,7 +192,7 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
         .enumerate()
         .skip(i1 + 1)
         .filter(|(_, (px2, py2, pz2, _, _, _))| {
-            sphere_collision(
+            is_sphere_collision(
                 config.sphere_radius,
                 *px1,
                 *py1,
@@ -173,19 +204,22 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
             )
         })
         .map(|(i2, _)| {
-            let px_diff = data.positions_x[i2] - data.positions_x[i1];
-            let py_diff = data.positions_y[i2] - data.positions_y[i1];
-            let pz_diff = data.positions_z[i2] - data.positions_z[i1];
-            let vx_diff = data.velocities_x[i2] - data.velocities_x[i1];
-            let vy_diff = data.velocities_y[i2] - data.velocities_y[i1];
-            let vz_diff = data.velocities_z[i2] - data.velocities_z[i1];
-            let distance_squared = px_diff * px_diff + py_diff * py_diff + pz_diff * pz_diff;
-            let relative_speed_squared = vx_diff * vx_diff + vy_diff * vy_diff + vz_diff * vz_diff;
-            let collision_distance = config.sphere_radius + config.sphere_radius;
-            let half_b = vx_diff * px_diff + vy_diff * py_diff + vz_diff * pz_diff;
-            let c = distance_squared - collision_distance * collision_distance;
-
-            let time = quadratic_root(relative_speed_squared, half_b + half_b, c);
+            let time = sphere_collision_time(
+                config.sphere_radius,
+                data.positions_x[i1],
+                data.positions_y[i1],
+                data.positions_z[i1],
+                data.velocities_x[i1],
+                data.velocities_y[i1],
+                data.velocities_z[i1],
+                config.sphere_radius,
+                data.positions_x[i2],
+                data.positions_y[i2],
+                data.positions_z[i2],
+                data.velocities_x[i2],
+                data.velocities_y[i2],
+                data.velocities_z[i2],
+            );
             if time.is_nan() {
                 None
             } else {
@@ -218,7 +252,7 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
         }
     });
 
-    let time = match first_collision {
+    let simulated_time = match first_collision {
         Some(collision) => {
             data.positions_x = iter_integrate(
                 collision.1.time,
@@ -294,36 +328,122 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
         &mut data.velocities_z[..],
         &mut data.positions_z[..],
     );
-    time
+    simulated_time
 }
 
-pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
-    data.positions_x = loop_integrate(
+pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f64 {
+    let positions_x = loop_integrate(
         config.time_step,
         &data.velocities_x[..],
         &data.positions_x[..],
     );
+    let positions_y = loop_integrate(
+        config.time_step,
+        &data.velocities_y[..],
+        &data.positions_y[..],
+    );
+    let positions_z = loop_integrate(
+        config.time_step,
+        &data.velocities_z[..],
+        &data.positions_z[..],
+    );
+
+    let mut first_collision = (f64::INFINITY, 0, 0);
+    for i1 in 0..positions_x.len()-1 {
+        for i2 in i1+1..positions_x.len() {
+            if is_sphere_collision(
+                config.sphere_radius,
+                positions_x[i1],
+                positions_y[i1],
+                positions_z[i1],
+                config.sphere_radius,
+                positions_x[i2],
+                positions_y[i2],
+                positions_z[i2],
+            ) {
+                let time = sphere_collision_time(
+                    config.sphere_radius,
+                    data.positions_x[i1],
+                    data.positions_y[i1],
+                    data.positions_z[i1],
+                    data.velocities_x[i1],
+                    data.velocities_y[i1],
+                    data.velocities_z[i1],
+                    config.sphere_radius,
+                    data.positions_x[i2],
+                    data.positions_y[i2],
+                    data.positions_z[i2],
+                    data.velocities_x[i2],
+                    data.velocities_y[i2],
+                    data.velocities_z[i2],
+                );
+                if time.is_normal() && time < first_collision.0 {
+                    first_collision = (time, i1, i2);
+                }
+            }
+        }
+    }
+    let simulated_time = if first_collision.0.is_normal() {
+        data.positions_x = loop_integrate(
+            first_collision.0,
+            &data.velocities_x[..],
+            &data.positions_x[..],
+        );
+        data.positions_y = loop_integrate(
+            first_collision.0,
+            &data.velocities_y[..],
+            &data.positions_y[..],
+        );
+        data.positions_z = loop_integrate(
+            first_collision.0,
+            &data.velocities_z[..],
+            &data.positions_z[..],
+        );
+        let displacement = (
+            data.positions_x[first_collision.2] - data.positions_x[first_collision.1],
+            data.positions_y[first_collision.2] - data.positions_y[first_collision.1],
+            data.positions_z[first_collision.2] - data.positions_z[first_collision.1],
+        );
+        let distance = (displacement.0 * displacement.0
+            + displacement.1 * displacement.1
+            + displacement.2 * displacement.2)
+            .sqrt();
+        let collision_normal = (
+            displacement.0 / distance,
+            displacement.1 / distance,
+            displacement.2 / distance,
+        );
+        let (left_x, right_x) = data.velocities_x.split_at_mut(first_collision.1 + 1);
+        let (left_y, right_y) = data.velocities_y.split_at_mut(first_collision.1 + 1);
+        let (left_z, right_z) = data.velocities_z.split_at_mut(first_collision.1 + 1);
+        sphere_collision_response(
+            collision_normal.0,
+            collision_normal.1,
+            collision_normal.2,
+            &mut right_x[first_collision.2 - left_x.len()],
+            &mut right_y[first_collision.2 - left_y.len()],
+            &mut right_z[first_collision.2 - left_z.len()],
+            &mut left_x[first_collision.1],
+            &mut left_y[first_collision.1],
+            &mut left_z[first_collision.1],
+        );
+        first_collision.0
+    } else {
+        config.time_step
+    };
+
     loop_apply_bounds(
         0.,
         config.max_x,
         &mut data.velocities_x[..],
         &mut data.positions_x[..],
     );
-    data.positions_y = loop_integrate(
-        config.time_step,
-        &data.velocities_y[..],
-        &data.positions_y[..],
-    );
+
     loop_apply_bounds(
         0.,
         config.max_y,
         &mut data.velocities_y[..],
         &mut data.positions_y[..],
-    );
-    data.positions_z = loop_integrate(
-        config.time_step,
-        &data.velocities_z[..],
-        &data.positions_z[..],
     );
     loop_apply_bounds(
         0.,
@@ -331,9 +451,10 @@ pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) {
         &mut data.velocities_z[..],
         &mut data.positions_z[..],
     );
+    simulated_time
 }
 
-fn loop_integrate(time_step: f64, positions: &[f64], velocities: &[f64]) -> Vec<f64> {
+fn loop_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
     let mut output = Vec::with_capacity(positions.len());
     for i in 0..positions.len() {
         output.push(positions[i] + time_step * velocities[i]);
