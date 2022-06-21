@@ -511,3 +511,18 @@ fn iter_apply_bounds<'a>(
         });
     positions
 }
+
+#[cfg(feature = "bench")]
+pub mod bench {
+    pub fn iter_integrate<'a>(
+        time_step: f64,
+        velocities: &'a [f64],
+        positions: &'a [f64],
+    ) -> impl Iterator<Item = f64> + 'a {
+        super::iter_integrate(time_step, &velocities, &positions)
+    }
+
+    pub fn loop_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+        super::loop_integrate(time_step, &velocities, &positions)
+    }
+}

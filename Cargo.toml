@@ -5,6 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+bench = []
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+
 [dependencies]
 kiss3d = "0.32"
 itertools = "0.10"
@@ -14,9 +21,9 @@ rand = "0.8"
 criterion = "0.3"
 
 [[bench]]
-name = "iter_take_time_step"
+name = "iter"
 harness = false
 
 [[bench]]
-name = "loop_take_time_step"
+name = "loop"
 harness = false
