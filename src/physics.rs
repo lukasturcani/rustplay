@@ -8,6 +8,7 @@ pub struct PhysicsConfig {
     pub sphere_radius: f64,
 }
 
+#[derive(Debug)]
 pub struct PhysicsData {
     pub positions_x: Vec<f64>,
     pub positions_y: Vec<f64>,
