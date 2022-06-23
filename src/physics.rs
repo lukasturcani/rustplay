@@ -81,12 +81,28 @@ fn vector_sub(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32
     (x1 - x2, y1 - y2, z1 - z2)
 }
 
+fn vector_sub_((x1, y1, z1): (f32, f32, f32), (x2, y2, z2): (f32, f32, f32)) -> (f32, f32, f32) {
+    vector_sub(x1, y1, z1, x2, y2, z2)
+}
+
+fn vector_add(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32, f32) {
+    (x1 + x2, y1 + y2, z1 + z2)
+}
+
+fn vector_add_((x1, y1, z1): (f32, f32, f32), (x2, y2, z2): (f32, f32, f32)) -> (f32, f32, f32) {
+    vector_add(x1, y1, z1, x2, y2, z2)
+}
+
 fn vector_mul(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32, f32) {
     (x1 * x2, y1 * y2, z1 * z2)
 }
 
+fn vector_scalar_mul(scalar: f32, x: f32, y: f32, z: f32) -> (f32, f32, f32) {
+    (scalar * x, scalar * y, scalar * z)
+}
+
 fn vector_sum_((x, y, z): (f32, f32, f32)) -> f32 {
-    return x + y + z;
+    x + y + z
 }
 
 fn vector_dot(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> f32 {
@@ -94,7 +110,7 @@ fn vector_dot(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> f32 {
 }
 
 fn vector_dot_((x1, y1, z1): (f32, f32, f32), (x2, y2, z2): (f32, f32, f32)) -> f32 {
-    return vector_dot(x1, y1, z1, x2, y2, z2);
+    vector_dot(x1, y1, z1, x2, y2, z2)
 }
 
 fn is_sphere_collision(
@@ -107,8 +123,8 @@ fn is_sphere_collision(
     py2: f32,
     pz2: f32,
 ) -> bool {
-    let (x_diff, y_diff, z_diff) = vector_sub(px2, py2, pz2, px1, py1, pz1);
-    let distance_squared = x_diff * x_diff + y_diff * y_diff + z_diff * z_diff;
+    let diff = vector_sub(px2, py2, pz2, px1, py1, pz1);
+    let distance_squared = vector_dot_(diff, diff);
     let collision_distance = r1 + r2;
     distance_squared < collision_distance * collision_distance
 }
@@ -129,12 +145,12 @@ fn sphere_collision_time(
     vy2: f32,
     vz2: f32,
 ) -> f32 {
-    let (px_diff, py_diff, pz_diff) = vector_sub(px2, py2, pz2, px1, py1, pz1);
-    let (vx_diff, vy_diff, vz_diff) = vector_sub(vx2, vy2, vz2, vx1, vy1, vz1);
-    let distance_squared = vector_dot(px_diff, py_diff, pz_diff, px_diff, py_diff, pz_diff);
-    let relative_speed_squared = vector_dot(vx_diff, vy_diff, vz_diff, vx_diff, vy_diff, vz_diff);
+    let p_diff = vector_sub(px2, py2, pz2, px1, py1, pz1);
+    let v_diff = vector_sub(vx2, vy2, vz2, vx1, vy1, vz1);
+    let distance_squared = vector_dot_(p_diff, p_diff);
+    let relative_speed_squared = vector_dot_(v_diff, v_diff);
     let collision_distance = r1 + r2;
-    let half_b = vector_dot(vx_diff, vy_diff, vz_diff, px_diff, py_diff, pz_diff);
+    let half_b = vector_dot_(p_diff, v_diff);
     let c = distance_squared - collision_distance * collision_distance;
     quadratic_root(relative_speed_squared, half_b + half_b, c)
 }
@@ -150,21 +166,13 @@ fn sphere_collision_response(
     vy2: &mut f32,
     vz2: &mut f32,
 ) {
-    let projection_magnitude1 = nx * *vx1 + ny * *vy1 + nz * *vz1;
-    let projection_x1 = projection_magnitude1 * nx;
-    let projection_y1 = projection_magnitude1 * ny;
-    let projection_z1 = projection_magnitude1 * nz;
+    let projection_magnitude1 = vector_dot(nx, ny, nz, *vx1, *vy1, *vz1);
+    let projection1 = vector_scalar_mul(projection_magnitude1, nx, ny, nz);
 
-    let projection_magnitude2 = nx * *vx2 + ny * *vy2 + nz * *vz2;
-    let projection_x2 = projection_magnitude2 * nx;
-    let projection_y2 = projection_magnitude2 * ny;
-    let projection_z2 = projection_magnitude2 * nz;
-    *vx1 = *vx1 + projection_x2 - projection_x1;
-    *vy1 = *vy1 + projection_y2 - projection_y1;
-    *vz1 = *vz1 + projection_z2 - projection_z1;
-    *vx2 = *vx2 + projection_x1 - projection_x2;
-    *vy2 = *vy2 + projection_y1 - projection_y2;
-    *vz2 = *vz2 + projection_z1 - projection_z2;
+    let projection_magnitude2 = vector_dot(nx, ny, nz, *vx2, *vy2, *vz2);
+    let projection2 = vector_scalar_mul(projection_magnitude2, nx, ny, nz);
+    (*vx1, *vy1, *vz1) = vector_add_((*vx1, *vx2, *vz1), vector_sub_(projection2, projection1));
+    (*vx2, *vy2, *vz2) = vector_add_((*vx2, *vy2, *vz2), vector_sub_(projection1, projection2));
 }
 
 pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32 {
