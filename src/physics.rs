@@ -1,3 +1,4 @@
+use core::arch::x86_64;
 use itertools::izip;
 
 pub struct PhysicsConfig {
@@ -607,6 +608,26 @@ fn iter_integrate<'a>(
         .map(move |(position, velocity)| position + time_step * velocity)
 }
 
+fn simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+    let num_items = positions.len();
+    let mut output = vec![0f64; num_items];
+    unsafe {
+        let time_step_ = x86_64::_mm256_set_pd(time_step, time_step, time_step, time_step);
+        for i in (0..num_items).step_by(4) {
+            let position = x86_64::_mm256_loadu_pd(&positions[i]);
+            let velocity = x86_64::_mm256_loadu_pd(&velocities[i]);
+            let displacement = x86_64::_mm256_mul_pd(velocity, time_step_);
+            let new_position = x86_64::_mm256_add_pd(position, displacement);
+            x86_64::_mm256_storeu_pd(&mut output[i], new_position);
+        }
+        let left_over = num_items % 4;
+        for i in (num_items - left_over)..num_items {
+            output[i] = positions[i] + time_step * velocities[i];
+        }
+    }
+    output
+}
+
 fn loop_apply_bounds<'a>(
     min: f64,
     max: f64,
@@ -676,5 +697,9 @@ pub mod bench {
         positions: &'a mut [f64],
     ) -> &'a mut [f64] {
         super::loop_apply_bounds(min, max, velocities, positions)
+    }
+
+    pub fn simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+        super::simd_integrate(time_step, &velocities, &positions)
     }
 }

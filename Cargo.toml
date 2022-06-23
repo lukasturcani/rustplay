@@ -41,3 +41,8 @@ harness = false
 name = "mix"
 required-features = ["bench"]
 harness = false
+
+[[bench]]
+name = "simd"
+required-features = ["bench"]
+harness = false
