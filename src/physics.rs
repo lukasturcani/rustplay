@@ -608,7 +608,7 @@ fn iter_integrate<'a>(
         .map(move |(position, velocity)| position + time_step * velocity)
 }
 
-fn simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+fn _simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
     let num_items = positions.len();
     let mut output = vec![0f64; num_items];
     unsafe {
@@ -700,6 +700,6 @@ pub mod bench {
     }
 
     pub fn simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
-        super::simd_integrate(time_step, &velocities, &positions)
+        super::_simd_integrate(time_step, &velocities, &positions)
     }
 }
