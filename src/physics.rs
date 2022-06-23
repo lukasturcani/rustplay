@@ -324,71 +324,73 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f3
         &positions_z,
     )
     .enumerate()
-    .map(|(i1, (p0x1, p0y1, p0z1, vx1, vy1, vz1, p1x1, p1y1, p1z1))| {
-        izip!(
-            &data.positions_x,
-            &data.positions_y,
-            &data.positions_z,
-            &data.velocities_x,
-            &data.velocities_y,
-            &data.velocities_z,
-            &positions_x,
-            &positions_y,
-            &positions_z,
-        )
-        .enumerate()
-        .skip(i1 + 1)
-        .filter(|(_, (_, _, _, _, _, _, p1x2, p1y2, p1z2))| {
-            is_sphere_collision(
-                config.sphere_radius,
-                *p1x1,
-                *p1y1,
-                *p1z1,
-                config.sphere_radius,
-                **p1x2,
-                **p1y2,
-                **p1z2,
+    .map(
+        |(i1, (p0x1, p0y1, p0z1, vx1, vy1, vz1, p1x1, p1y1, p1z1))| {
+            izip!(
+                &data.positions_x,
+                &data.positions_y,
+                &data.positions_z,
+                &data.velocities_x,
+                &data.velocities_y,
+                &data.velocities_z,
+                &positions_x,
+                &positions_y,
+                &positions_z,
             )
-        })
-        .map(|(i2, (p0x2, p0y2, p0z2, vx2, vy2, vz2, _, _, _))| {
-            let time = sphere_collision_time(
-                config.sphere_radius,
-                *p0x1,
-                *p0y1,
-                *p0z1,
-                *vx1,
-                *vy1,
-                *vz1,
-                config.sphere_radius,
-                *p0x2,
-                *p0y2,
-                *p0z2,
-                *vx2,
-                *vy2,
-                *vz2,
-            );
-            if time.is_nan() {
-                None
-            } else {
-                Some((
-                    SphereCollisionId {
-                        sphere1: i1,
-                        sphere2: i2,
-                    },
-                    SphereCollision { time },
-                ))
-            }
-        })
-        .filter(Option::is_some)
-        .map(Option::unwrap)
-        .reduce(|first_collision, second_collision| {
-            if first_collision.1.time < second_collision.1.time {
-                first_collision
-            } else {
-                second_collision
-            }
-        })
-    })
+            .enumerate()
+            .skip(i1 + 1)
+            .filter(|(_, (_, _, _, _, _, _, p1x2, p1y2, p1z2))| {
+                is_sphere_collision(
+                    config.sphere_radius,
+                    *p1x1,
+                    *p1y1,
+                    *p1z1,
+                    config.sphere_radius,
+                    **p1x2,
+                    **p1y2,
+                    **p1z2,
+                )
+            })
+            .map(|(i2, (p0x2, p0y2, p0z2, vx2, vy2, vz2, _, _, _))| {
+                let time = sphere_collision_time(
+                    config.sphere_radius,
+                    *p0x1,
+                    *p0y1,
+                    *p0z1,
+                    *vx1,
+                    *vy1,
+                    *vz1,
+                    config.sphere_radius,
+                    *p0x2,
+                    *p0y2,
+                    *p0z2,
+                    *vx2,
+                    *vy2,
+                    *vz2,
+                );
+                if time.is_nan() {
+                    None
+                } else {
+                    Some((
+                        SphereCollisionId {
+                            sphere1: i1,
+                            sphere2: i2,
+                        },
+                        SphereCollision { time },
+                    ))
+                }
+            })
+            .filter(Option::is_some)
+            .map(Option::unwrap)
+            .reduce(|first_collision, second_collision| {
+                if first_collision.1.time < second_collision.1.time {
+                    first_collision
+                } else {
+                    second_collision
+                }
+            })
+        },
+    )
     .filter(Option::is_some)
     .map(Option::unwrap)
     .reduce(|first_collision, second_collision| {
