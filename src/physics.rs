@@ -2,57 +2,57 @@ use core::arch::x86_64;
 use itertools::izip;
 
 pub struct PhysicsConfig {
-    pub time_step: f64,
-    pub max_x: f64,
-    pub max_y: f64,
-    pub max_z: f64,
-    pub sphere_radius: f64,
+    pub time_step: f32,
+    pub max_x: f32,
+    pub max_y: f32,
+    pub max_z: f32,
+    pub sphere_radius: f32,
 }
 
 #[derive(Debug)]
 pub struct PhysicsData {
-    pub positions_x: Vec<f64>,
-    pub positions_y: Vec<f64>,
-    pub positions_z: Vec<f64>,
-    pub velocities_x: Vec<f64>,
-    pub velocities_y: Vec<f64>,
-    pub velocities_z: Vec<f64>,
+    pub positions_x: Vec<f32>,
+    pub positions_y: Vec<f32>,
+    pub positions_z: Vec<f32>,
+    pub velocities_x: Vec<f32>,
+    pub velocities_y: Vec<f32>,
+    pub velocities_z: Vec<f32>,
 }
 
 pub fn get_random_physics_data(
     generator: &mut impl rand::Rng,
     num_objects: u64,
-    max_position_x: f64,
-    max_position_y: f64,
-    max_position_z: f64,
-    max_velocity_x: f64,
-    max_velocity_y: f64,
-    max_velocity_z: f64,
+    max_position_x: f32,
+    max_position_y: f32,
+    max_position_z: f32,
+    max_velocity_x: f32,
+    max_velocity_y: f32,
+    max_velocity_z: f32,
 ) -> PhysicsData {
     PhysicsData {
         positions_x: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_position_x)
+            .map(|_| generator.gen::<f32>() * max_position_x)
             .collect(),
         positions_y: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_position_y)
+            .map(|_| generator.gen::<f32>() * max_position_y)
             .collect(),
         positions_z: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_position_z)
+            .map(|_| generator.gen::<f32>() * max_position_z)
             .collect(),
         velocities_x: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_velocity_x)
+            .map(|_| generator.gen::<f32>() * max_velocity_x)
             .collect(),
         velocities_y: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_velocity_y)
+            .map(|_| generator.gen::<f32>() * max_velocity_y)
             .collect(),
         velocities_z: (0..num_objects)
-            .map(|_| generator.gen::<f64>() * max_velocity_z)
+            .map(|_| generator.gen::<f32>() * max_velocity_z)
             .collect(),
     }
 }
 
 struct SphereCollision {
-    time: f64,
+    time: f32,
 }
 
 struct SphereCollisionId {
@@ -60,15 +60,15 @@ struct SphereCollisionId {
     sphere2: usize,
 }
 
-fn quadratic_root(a: f64, b: f64, c: f64) -> f64 {
+fn quadratic_root(a: f32, b: f32, c: f32) -> f32 {
     let term1 = -b;
-    let term2 = (b * b - 4f64 * a * c).sqrt();
+    let term2 = (b * b - 4f32 * a * c).sqrt();
     let term3 = a + a;
     let root1 = (term1 + term2) / term3;
     let root2 = (term1 - term2) / term3;
-    if root1 < 0f64 {
+    if root1 < 0f32 {
         root1
-    } else if root2 < 0f64 {
+    } else if root2 < 0f32 {
         root1
     } else if root1 < root2 {
         root1
@@ -77,35 +77,35 @@ fn quadratic_root(a: f64, b: f64, c: f64) -> f64 {
     }
 }
 
-fn vector_sub(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> (f64, f64, f64) {
+fn vector_sub(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32, f32) {
     (x1 - x2, y1 - y2, z1 - z2)
 }
 
-fn vector_mul(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> (f64, f64, f64) {
+fn vector_mul(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32, f32) {
     (x1 * x2, y1 * y2, z1 * z2)
 }
 
-fn vector_sum_((x, y, z): (f64, f64, f64)) -> f64 {
+fn vector_sum_((x, y, z): (f32, f32, f32)) -> f32 {
     return x + y + z;
 }
 
-fn vector_dot(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> f64 {
+fn vector_dot(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> f32 {
     vector_sum_(vector_mul(x1, y1, z1, x2, y2, z2))
 }
 
-fn vector_dot_((x1, y1, z1): (f64, f64, f64), (x2, y2, z2): (f64, f64, f64)) -> f64 {
+fn vector_dot_((x1, y1, z1): (f32, f32, f32), (x2, y2, z2): (f32, f32, f32)) -> f32 {
     return vector_dot(x1, y1, z1, x2, y2, z2);
 }
 
 fn is_sphere_collision(
-    r1: f64,
-    px1: f64,
-    py1: f64,
-    pz1: f64,
-    r2: f64,
-    px2: f64,
-    py2: f64,
-    pz2: f64,
+    r1: f32,
+    px1: f32,
+    py1: f32,
+    pz1: f32,
+    r2: f32,
+    px2: f32,
+    py2: f32,
+    pz2: f32,
 ) -> bool {
     let (x_diff, y_diff, z_diff) = vector_sub(px2, py2, pz2, px1, py1, pz1);
     let distance_squared = x_diff * x_diff + y_diff * y_diff + z_diff * z_diff;
@@ -114,21 +114,21 @@ fn is_sphere_collision(
 }
 
 fn sphere_collision_time(
-    r1: f64,
-    px1: f64,
-    py1: f64,
-    pz1: f64,
-    vx1: f64,
-    vy1: f64,
-    vz1: f64,
-    r2: f64,
-    px2: f64,
-    py2: f64,
-    pz2: f64,
-    vx2: f64,
-    vy2: f64,
-    vz2: f64,
-) -> f64 {
+    r1: f32,
+    px1: f32,
+    py1: f32,
+    pz1: f32,
+    vx1: f32,
+    vy1: f32,
+    vz1: f32,
+    r2: f32,
+    px2: f32,
+    py2: f32,
+    pz2: f32,
+    vx2: f32,
+    vy2: f32,
+    vz2: f32,
+) -> f32 {
     let (px_diff, py_diff, pz_diff) = vector_sub(px2, py2, pz2, px1, py1, pz1);
     let (vx_diff, vy_diff, vz_diff) = vector_sub(vx2, vy2, vz2, vx1, vy1, vz1);
     let distance_squared = vector_dot(px_diff, py_diff, pz_diff, px_diff, py_diff, pz_diff);
@@ -140,15 +140,15 @@ fn sphere_collision_time(
 }
 
 fn sphere_collision_response(
-    nx: f64,
-    ny: f64,
-    nz: f64,
-    vx1: &mut f64,
-    vy1: &mut f64,
-    vz1: &mut f64,
-    vx2: &mut f64,
-    vy2: &mut f64,
-    vz2: &mut f64,
+    nx: f32,
+    ny: f32,
+    nz: f32,
+    vx1: &mut f32,
+    vy1: &mut f32,
+    vz1: &mut f32,
+    vx2: &mut f32,
+    vy2: &mut f32,
+    vz2: &mut f32,
 ) {
     let projection_magnitude1 = nx * *vx1 + ny * *vy1 + nz * *vz1;
     let projection_x1 = projection_magnitude1 * nx;
@@ -167,7 +167,7 @@ fn sphere_collision_response(
     *vz2 = *vz2 + projection_z1 - projection_z2;
 }
 
-pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f64 {
+pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32 {
     let positions_x: Vec<_> = iter_integrate(
         config.time_step,
         &data.velocities_x[..],
@@ -187,7 +187,7 @@ pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f64
     )
     .collect();
 
-    let mut first_collision = (f64::INFINITY, 0, 0);
+    let mut first_collision = (f32::INFINITY, 0, 0);
     for i1 in 0..positions_x.len() - 1 {
         for i2 in i1 + 1..positions_x.len() {
             if is_sphere_collision(
@@ -293,7 +293,7 @@ pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f64
     simulated_time
 }
 
-pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f64 {
+pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32 {
     let positions_x: Vec<_> = iter_integrate(
         config.time_step,
         &data.velocities_x[..],
@@ -469,7 +469,7 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
     simulated_time
 }
 
-pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f64 {
+pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32 {
     let positions_x = loop_integrate(
         config.time_step,
         &data.velocities_x[..],
@@ -486,7 +486,7 @@ pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
         &data.positions_z[..],
     );
 
-    let mut first_collision = (f64::INFINITY, 0, 0);
+    let mut first_collision = (f32::INFINITY, 0, 0);
     for i1 in 0..positions_x.len() - 1 {
         for i2 in i1 + 1..positions_x.len() {
             if is_sphere_collision(
@@ -589,7 +589,7 @@ pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f6
     simulated_time
 }
 
-fn loop_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+fn loop_integrate(time_step: f32, velocities: &[f32], positions: &[f32]) -> Vec<f32> {
     let mut output = Vec::with_capacity(positions.len());
     for i in 0..positions.len() {
         output.push(positions[i] + time_step * velocities[i]);
@@ -598,29 +598,31 @@ fn loop_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<
 }
 
 fn iter_integrate<'a>(
-    time_step: f64,
-    velocities: &'a [f64],
-    positions: &'a [f64],
-) -> impl Iterator<Item = f64> + 'a {
+    time_step: f32,
+    velocities: &'a [f32],
+    positions: &'a [f32],
+) -> impl Iterator<Item = f32> + 'a {
     positions
         .iter()
         .zip(velocities)
         .map(move |(position, velocity)| position + time_step * velocity)
 }
 
-fn _simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+fn _simd_integrate(time_step: f32, velocities: &[f32], positions: &[f32]) -> Vec<f32> {
     let num_items = positions.len();
-    let mut output = vec![0f64; num_items];
+    let mut output = vec![0f32; num_items];
     unsafe {
-        let time_step_ = x86_64::_mm256_set_pd(time_step, time_step, time_step, time_step);
-        for i in (0..num_items).step_by(4) {
-            let position = x86_64::_mm256_loadu_pd(&positions[i]);
-            let velocity = x86_64::_mm256_loadu_pd(&velocities[i]);
-            let displacement = x86_64::_mm256_mul_pd(velocity, time_step_);
-            let new_position = x86_64::_mm256_add_pd(position, displacement);
-            x86_64::_mm256_storeu_pd(&mut output[i], new_position);
+        let time_step_ = x86_64::_mm256_set_ps(
+            time_step, time_step, time_step, time_step, time_step, time_step, time_step, time_step,
+        );
+        for i in (0..num_items).step_by(8) {
+            let position = x86_64::_mm256_loadu_ps(&positions[i]);
+            let velocity = x86_64::_mm256_loadu_ps(&velocities[i]);
+            let displacement = x86_64::_mm256_mul_ps(velocity, time_step_);
+            let new_position = x86_64::_mm256_add_ps(position, displacement);
+            x86_64::_mm256_storeu_ps(&mut output[i], new_position);
         }
-        let left_over = num_items % 4;
+        let left_over = num_items % 8;
         for i in (num_items - left_over)..num_items {
             output[i] = positions[i] + time_step * velocities[i];
         }
@@ -629,11 +631,11 @@ fn _simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec
 }
 
 fn loop_apply_bounds<'a>(
-    min: f64,
-    max: f64,
-    velocities: &mut [f64],
-    positions: &'a mut [f64],
-) -> &'a mut [f64] {
+    min: f32,
+    max: f32,
+    velocities: &mut [f32],
+    positions: &'a mut [f32],
+) -> &'a mut [f32] {
     for i in 0..positions.len() {
         if positions[i] < min {
             positions[i] = min + min - positions[i];
@@ -647,11 +649,11 @@ fn loop_apply_bounds<'a>(
 }
 
 fn iter_apply_bounds<'a>(
-    min: f64,
-    max: f64,
-    velocities: &mut [f64],
-    positions: &'a mut [f64],
-) -> &'a mut [f64] {
+    min: f32,
+    max: f32,
+    velocities: &mut [f32],
+    positions: &'a mut [f32],
+) -> &'a mut [f32] {
     positions
         .iter_mut()
         .zip(velocities)
@@ -670,36 +672,36 @@ fn iter_apply_bounds<'a>(
 #[cfg(feature = "bench")]
 pub mod bench {
     pub fn iter_integrate<'a>(
-        time_step: f64,
-        velocities: &'a [f64],
-        positions: &'a [f64],
-    ) -> impl Iterator<Item = f64> + 'a {
+        time_step: f32,
+        velocities: &'a [f32],
+        positions: &'a [f32],
+    ) -> impl Iterator<Item = f32> + 'a {
         super::iter_integrate(time_step, &velocities, &positions)
     }
 
     pub fn iter_apply_bounds<'a>(
-        min: f64,
-        max: f64,
-        velocities: &mut [f64],
-        positions: &'a mut [f64],
-    ) -> &'a mut [f64] {
+        min: f32,
+        max: f32,
+        velocities: &mut [f32],
+        positions: &'a mut [f32],
+    ) -> &'a mut [f32] {
         super::iter_apply_bounds(min, max, velocities, positions)
     }
 
-    pub fn loop_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+    pub fn loop_integrate(time_step: f32, velocities: &[f32], positions: &[f32]) -> Vec<f32> {
         super::loop_integrate(time_step, &velocities, &positions)
     }
 
     pub fn loop_apply_bounds<'a>(
-        min: f64,
-        max: f64,
-        velocities: &mut [f64],
-        positions: &'a mut [f64],
-    ) -> &'a mut [f64] {
+        min: f32,
+        max: f32,
+        velocities: &mut [f32],
+        positions: &'a mut [f32],
+    ) -> &'a mut [f32] {
         super::loop_apply_bounds(min, max, velocities, positions)
     }
 
-    pub fn simd_integrate(time_step: f64, velocities: &[f64], positions: &[f64]) -> Vec<f64> {
+    pub fn simd_integrate(time_step: f32, velocities: &[f32], positions: &[f32]) -> Vec<f32> {
         super::_simd_integrate(time_step, &velocities, &positions)
     }
 }

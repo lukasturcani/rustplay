@@ -32,7 +32,7 @@ fn main() {
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity: f64 = 20.;
+    let max_velocity: f32 = 20.;
     let num_spheres = 350;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
@@ -68,7 +68,7 @@ fn main() {
             physics_config.max_z as f32,
             &mut window,
         );
-        let mut simulated_time = 0f64;
+        let mut simulated_time = 0f32;
         while simulated_time < 0.016 {
             simulated_time += physics::mix_take_time_step(&physics_config, &mut physics_spheres);
         }

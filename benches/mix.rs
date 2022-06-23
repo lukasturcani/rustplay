@@ -12,7 +12,7 @@ pub fn benchmark_mix_take_time_step(c: &mut Criterion) {
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity: f64 = 20.;
+    let max_velocity: f32 = 20.;
     let num_spheres = 350;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,

@@ -12,7 +12,7 @@ pub fn benchmark_iter_take_time_step(c: &mut Criterion) {
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity: f64 = 20.;
+    let max_velocity: f32 = 20.;
     let num_spheres = 350;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
@@ -38,7 +38,7 @@ pub fn benchmark_iter_integrate(c: &mut Criterion) {
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity: f64 = 20.;
+    let max_velocity: f32 = 20.;
     let num_spheres = 350000;
     let physics_spheres = physics::get_random_physics_data(
         &mut generator,
@@ -71,7 +71,7 @@ pub fn benchmark_iter_apply_bounds(c: &mut Criterion) {
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity: f64 = 20.;
+    let max_velocity: f32 = 20.;
     let num_spheres = 350000;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
@@ -86,7 +86,7 @@ pub fn benchmark_iter_apply_bounds(c: &mut Criterion) {
     c.bench_function("iter_apply_bounds", |b| {
         b.iter(|| {
             physics::bench::iter_apply_bounds(
-                0f64,
+                0f32,
                 physics_config.max_x,
                 &mut physics_spheres.velocities_x,
                 &mut physics_spheres.positions_x,
