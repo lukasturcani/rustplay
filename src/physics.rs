@@ -313,53 +313,59 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f3
     )
     .collect();
     let first_collision = izip!(
+        &data.positions_x,
+        &data.positions_y,
+        &data.positions_z,
+        &data.velocities_x,
+        &data.velocities_y,
+        &data.velocities_z,
         &positions_x,
         &positions_y,
         &positions_z,
-        &data.velocities_x,
-        &data.velocities_y,
-        &data.velocities_z
     )
     .enumerate()
-    .map(|(i1, (px1, py1, pz1, _, _, _))| {
+    .map(|(i1, (p0x1, p0y1, p0z1, vx1, vy1, vz1, p1x1, p1y1, p1z1))| {
         izip!(
+            &data.positions_x,
+            &data.positions_y,
+            &data.positions_z,
+            &data.velocities_x,
+            &data.velocities_y,
+            &data.velocities_z,
             &positions_x,
             &positions_y,
             &positions_z,
-            &data.velocities_x,
-            &data.velocities_y,
-            &data.velocities_z
         )
         .enumerate()
         .skip(i1 + 1)
-        .filter(|(_, (px2, py2, pz2, _, _, _))| {
+        .filter(|(_, (_, _, _, _, _, _, p1x2, p1y2, p1z2))| {
             is_sphere_collision(
                 config.sphere_radius,
-                *px1,
-                *py1,
-                *pz1,
+                *p1x1,
+                *p1y1,
+                *p1z1,
                 config.sphere_radius,
-                **px2,
-                **py2,
-                **pz2,
+                **p1x2,
+                **p1y2,
+                **p1z2,
             )
         })
-        .map(|(i2, _)| {
+        .map(|(i2, (p0x2, p0y2, p0z2, vx2, vy2, vz2, _, _, _))| {
             let time = sphere_collision_time(
                 config.sphere_radius,
-                data.positions_x[i1],
-                data.positions_y[i1],
-                data.positions_z[i1],
-                data.velocities_x[i1],
-                data.velocities_y[i1],
-                data.velocities_z[i1],
+                *p0x1,
+                *p0y1,
+                *p0z1,
+                *vx1,
+                *vy1,
+                *vz1,
                 config.sphere_radius,
-                data.positions_x[i2],
-                data.positions_y[i2],
-                data.positions_z[i2],
-                data.velocities_x[i2],
-                data.velocities_y[i2],
-                data.velocities_z[i2],
+                *p0x2,
+                *p0y2,
+                *p0z2,
+                *vx2,
+                *vy2,
+                *vz2,
             );
             if time.is_nan() {
                 None
