@@ -28,21 +28,16 @@ rand = "0.8"
 criterion = "0.3"
 
 [[bench]]
-name = "iter"
+name = "take_time_step"
 required-features = ["bench"]
 harness = false
 
 [[bench]]
-name = "loop"
+name = "integrate"
 required-features = ["bench"]
 harness = false
 
 [[bench]]
-name = "mix"
-required-features = ["bench"]
-harness = false
-
-[[bench]]
-name = "simd"
+name = "apply_bounds"
 required-features = ["bench"]
 harness = false
