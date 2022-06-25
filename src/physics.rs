@@ -67,7 +67,7 @@ fn quadratic_root(a: f32, b: f32, c: f32) -> f32 {
     let root1 = (term1 + term2) / term3;
     let root2 = (term1 - term2) / term3;
     if root1 < 0f32 {
-        root1
+        root2
     } else if root2 < 0f32 {
         root1
     } else if root1 < root2 {

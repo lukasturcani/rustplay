@@ -32,8 +32,8 @@ fn main() {
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity: f32 = 20.;
-    let num_spheres = 350;
+    let max_velocity = 2.0;
+    let num_spheres = 100;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
         num_spheres,
