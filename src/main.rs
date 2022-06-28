@@ -51,8 +51,8 @@ fn main() {
         &physics_spheres.positions_z,
     )
     .map(|(x, y, z)| {
-        let mut sphere = window.add_sphere(physics_config.sphere_radius as f32);
-        sphere.set_local_translation(Translation3::new(*x as f32, *y as f32, *z as f32));
+        let mut sphere = window.add_sphere(physics_config.sphere_radius);
+        sphere.set_local_translation(Translation3::new(*x, *y, *z));
         sphere.set_color(1.0, 0.0, 0.0);
         sphere
     })
@@ -63,12 +63,12 @@ fn main() {
     while window.render() {
         draw_box(
             &Point3::new(0., 1., 0.),
-            physics_config.max_x as f32,
-            physics_config.max_y as f32,
-            physics_config.max_z as f32,
+            physics_config.max_x,
+            physics_config.max_y,
+            physics_config.max_z,
             &mut window,
         );
-        let mut simulated_time = 0f32;
+        let mut simulated_time = 0.;
         while simulated_time < 0.016 {
             simulated_time += physics::iter_take_time_step(&physics_config, &mut physics_spheres);
         }
@@ -79,7 +79,7 @@ fn main() {
             &physics_spheres.positions_z,
         )
         .map(|(mut sphere, x, y, z)| {
-            sphere.set_local_translation(Translation3::new(*x as f32, *y as f32, *z as f32));
+            sphere.set_local_translation(Translation3::new(*x, *y, *z));
             sphere
         })
         .collect();
