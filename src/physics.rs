@@ -171,7 +171,7 @@ fn sphere_collision_response(
 
     let projection_magnitude2 = vector_dot(nx, ny, nz, *vx2, *vy2, *vz2);
     let projection2 = vector_scalar_mul(projection_magnitude2, nx, ny, nz);
-    (*vx1, *vy1, *vz1) = vector_add_((*vx1, *vx2, *vz1), vector_sub_(projection2, projection1));
+    (*vx1, *vy1, *vz1) = vector_add_((*vx1, *vy1, *vz1), vector_sub_(projection2, projection1));
     (*vx2, *vy2, *vz2) = vector_add_((*vx2, *vy2, *vz2), vector_sub_(projection1, projection2));
 }
 
@@ -683,6 +683,77 @@ fn iter_apply_bounds<'a>(
             }
         });
     positions
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn vector_mul() {
+        assert_eq!(super::vector_mul(1., 2., 3., 0., 0., 0.), (0., 0., 0.));
+        assert_eq!(super::vector_mul(1., 2., 3., 1., 1., 1.), (1., 2., 3.));
+    }
+    #[test]
+    fn vector_dot() {
+        assert_eq!(super::vector_dot(1., 2., 3., 1., 1., 1.), 6.);
+        assert_eq!(super::vector_dot(1., 2., 3., 0., 0., 0.), 0.);
+        assert_eq!(super::vector_dot(1., 2., 3., 1., 2., 3.), 14.);
+        assert_eq!(super::vector_dot(1., 2., 3., 4., 5., 6.), 32.);
+    }
+    #[test]
+    fn vector_dot_() {
+        assert_eq!(super::vector_dot_((1., 2., 3.), (1., 1., 1.)), 6.);
+        assert_eq!(super::vector_dot_((1., 2., 3.), (0., 0., 0.)), 0.);
+        assert_eq!(super::vector_dot_((1., 2., 3.), (1., 2., 3.)), 14.);
+        assert_eq!(super::vector_dot_((1., 2., 3.), (4., 5., 6.)), 32.);
+    }
+    #[test]
+    fn vector_sub() {
+        assert_eq!(super::vector_sub(1., 2., 3., 0., 0., 0.), (1., 2., 3.));
+        assert_eq!(super::vector_sub(1., 2., 3., 1., 2., 3.), (0., 0., 0.));
+    }
+    #[test]
+    fn vector_sub_() {
+        assert_eq!(super::vector_sub_((1., 2., 3.), (0., 0., 0.)), (1., 2., 3.));
+        assert_eq!(super::vector_sub_((1., 2., 3.), (1., 2., 3.)), (0., 0., 0.));
+    }
+    #[test]
+    fn vector_add() {
+        assert_eq!(super::vector_add(1., 2., 3., 0., 0., 0.), (1., 2., 3.));
+        assert_eq!(super::vector_add(1., 2., 3., 4., 5., 6.), (5., 7., 9.));
+    }
+    #[test]
+    fn vector_add_() {
+        assert_eq!(super::vector_add_((1., 2., 3.), (0., 0., 0.)), (1., 2., 3.));
+        assert_eq!(super::vector_add_((1., 2., 3.), (4., 5., 6.)), (5., 7., 9.));
+    }
+    #[test]
+    fn vector_sum_() {
+        assert_eq!(super::vector_sum_((1., 2., 3.)), 6.);
+    }
+    #[test]
+    fn vector_scalar_mul() {
+        assert_eq!(super::vector_scalar_mul(2., 1., 2., 3.), (2., 4., 6.));
+    }
+    #[test]
+    fn iter_apply_bounds() {
+        let min = 0.;
+        let max = 50.;
+        let mut velocities = vec![1., 2., 3., 4.];
+        let mut positions = vec![-1., 40., 53., 21.];
+        super::iter_apply_bounds(min, max, &mut velocities, &mut positions);
+        assert_eq!(velocities, vec![-1., 2., -3., 4.]);
+        assert_eq!(positions, vec![1., 40., 47., 21.]);
+    }
+    #[test]
+    fn sphere_collision_response() {
+        let (nx, ny, nz) = (1., 0., 0.);
+        let (mut vx1, mut vy1, mut vz1) = (1., 0., 0.);
+        let (mut vx2, mut vy2, mut vz2) = (-1., 0., 0.);
+        super::sphere_collision_response(
+            nx, ny, nz, &mut vx1, &mut vy1, &mut vz1, &mut vx2, &mut vy2, &mut vz2,
+        );
+        assert_eq!((vx1, vy1, vz1), (-1., 0., 0.));
+    }
 }
 
 #[cfg(feature = "bench")]
