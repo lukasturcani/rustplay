@@ -51,6 +51,22 @@ pub fn get_random_physics_data(
     }
 }
 
+pub fn get_two_spheres(
+    position1: f32,
+    position2: f32,
+    velocity1: f32,
+    velocity2: f32,
+) -> PhysicsData {
+    PhysicsData {
+        positions_x: vec![position1, position2],
+        positions_y: vec![0., 0.],
+        positions_z: vec![0., 0.],
+        velocities_x: vec![velocity1, velocity2],
+        velocities_y: vec![0., 0.],
+        velocities_z: vec![0., 0.],
+    }
+}
+
 struct SphereCollision {
     time: f32,
 }
@@ -301,21 +317,31 @@ pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32
     simulated_time
 }
 
-pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32 {
+pub fn iter_take_time_step(
+    config: &PhysicsConfig,
+    simulated_time: f32,
+    data: &mut PhysicsData,
+) -> f32 {
+    let mut time_to_simulate = config.time_step - simulated_time;
+    if time_to_simulate < 0.0001 {
+        time_to_simulate = 0.0001;
+    }
+    let time_to_simulate = time_to_simulate;
+
     let positions_x: Vec<_> = iter_integrate(
-        config.time_step,
+        time_to_simulate,
         &data.velocities_x[..],
         &data.positions_x[..],
     )
     .collect();
     let positions_y: Vec<_> = iter_integrate(
-        config.time_step,
+        time_to_simulate,
         &data.velocities_y[..],
         &data.positions_y[..],
     )
     .collect();
     let positions_z: Vec<_> = iter_integrate(
-        config.time_step,
+        time_to_simulate,
         &data.velocities_z[..],
         &data.positions_z[..],
     )
@@ -411,56 +437,63 @@ pub fn iter_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f3
 
     let simulated_time = match first_collision {
         Some(collision) => {
-            data.positions_x = iter_integrate(
-                collision.1.time,
-                &data.velocities_x[..],
-                &data.positions_x[..],
-            )
-            .collect();
-            data.positions_y = iter_integrate(
-                collision.1.time,
-                &data.velocities_y[..],
-                &data.positions_y[..],
-            )
-            .collect();
-            data.positions_z = iter_integrate(
-                collision.1.time,
-                &data.velocities_z[..],
-                &data.positions_z[..],
-            )
-            .collect();
-            let displacement = (
-                data.positions_x[collision.0.sphere2] - data.positions_x[collision.0.sphere1],
-                data.positions_y[collision.0.sphere2] - data.positions_y[collision.0.sphere1],
-                data.positions_z[collision.0.sphere2] - data.positions_z[collision.0.sphere1],
-            );
-            let distance = vector_dot_(displacement, displacement).sqrt();
-            let collision_normal = (
-                displacement.0 / distance,
-                displacement.1 / distance,
-                displacement.2 / distance,
-            );
-            let (left_x, right_x) = data.velocities_x.split_at_mut(collision.0.sphere1 + 1);
-            let (left_y, right_y) = data.velocities_y.split_at_mut(collision.0.sphere1 + 1);
-            let (left_z, right_z) = data.velocities_z.split_at_mut(collision.0.sphere1 + 1);
-            sphere_collision_response(
-                collision_normal.0,
-                collision_normal.1,
-                collision_normal.2,
-                &mut right_x[collision.0.sphere2 - left_x.len()],
-                &mut right_y[collision.0.sphere2 - left_y.len()],
-                &mut right_z[collision.0.sphere2 - left_z.len()],
-                &mut left_x[collision.0.sphere1],
-                &mut left_y[collision.0.sphere1],
-                &mut left_z[collision.0.sphere1],
-            );
-            collision.1.time
+            if collision.1.time < time_to_simulate {
+                data.positions_x = iter_integrate(
+                    collision.1.time,
+                    &data.velocities_x[..],
+                    &data.positions_x[..],
+                )
+                .collect();
+                data.positions_y = iter_integrate(
+                    collision.1.time,
+                    &data.velocities_y[..],
+                    &data.positions_y[..],
+                )
+                .collect();
+                data.positions_z = iter_integrate(
+                    collision.1.time,
+                    &data.velocities_z[..],
+                    &data.positions_z[..],
+                )
+                .collect();
+                let displacement = (
+                    data.positions_x[collision.0.sphere2] - data.positions_x[collision.0.sphere1],
+                    data.positions_y[collision.0.sphere2] - data.positions_y[collision.0.sphere1],
+                    data.positions_z[collision.0.sphere2] - data.positions_z[collision.0.sphere1],
+                );
+                let distance = vector_dot_(displacement, displacement).sqrt();
+                let collision_normal = (
+                    displacement.0 / distance,
+                    displacement.1 / distance,
+                    displacement.2 / distance,
+                );
+                let (left_x, right_x) = data.velocities_x.split_at_mut(collision.0.sphere1 + 1);
+                let (left_y, right_y) = data.velocities_y.split_at_mut(collision.0.sphere1 + 1);
+                let (left_z, right_z) = data.velocities_z.split_at_mut(collision.0.sphere1 + 1);
+                sphere_collision_response(
+                    collision_normal.0,
+                    collision_normal.1,
+                    collision_normal.2,
+                    &mut right_x[collision.0.sphere2 - left_x.len()],
+                    &mut right_y[collision.0.sphere2 - left_y.len()],
+                    &mut right_z[collision.0.sphere2 - left_z.len()],
+                    &mut left_x[collision.0.sphere1],
+                    &mut left_y[collision.0.sphere1],
+                    &mut left_z[collision.0.sphere1],
+                );
+                collision.1.time
+            } else {
+                data.positions_x = positions_x;
+                data.positions_y = positions_y;
+                data.positions_z = positions_z;
+                time_to_simulate
+            }
         }
         None => {
             data.positions_x = positions_x;
             data.positions_y = positions_y;
             data.positions_z = positions_z;
-            config.time_step
+            time_to_simulate
         }
     };
 
@@ -753,6 +786,34 @@ mod tests {
             nx, ny, nz, &mut vx1, &mut vy1, &mut vz1, &mut vx2, &mut vy2, &mut vz2,
         );
         assert_eq!((vx1, vy1, vz1), (-1., 0., 0.));
+    }
+    #[test]
+    fn iter_integrate() {
+        let velocities = vec![10., 10.];
+        let positions = vec![0., 15.];
+        let new_positions: Vec<_> = super::iter_integrate(2., &velocities, &positions).collect();
+        assert_eq!(new_positions, vec![20., 35.]);
+    }
+    #[test]
+    fn iter_take_time_step() {
+        let physics_config = super::PhysicsConfig {
+            time_step: 2.,
+            max_x: 70.,
+            max_y: 70.,
+            max_z: 70.,
+            sphere_radius: 1.,
+        };
+        let simulated_time = 0.;
+        let mut physics_data = super::PhysicsData {
+            positions_x: vec![5., 15.],
+            positions_y: vec![0., 0.],
+            positions_z: vec![0., 0.],
+            velocities_x: vec![5., 10.],
+            velocities_y: vec![0., 0.],
+            velocities_z: vec![0., 0.],
+        };
+        super::iter_take_time_step(&physics_config, simulated_time, &mut physics_data);
+        assert_eq!(physics_data.positions_x, vec![15., 35.]);
     }
 }
 

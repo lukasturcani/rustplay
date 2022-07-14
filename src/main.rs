@@ -4,26 +4,16 @@ use kiss3d::light::Light;
 use kiss3d::window::Window;
 
 use itertools::izip;
+use log::info;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use rustplay::graphics;
 use rustplay::physics::{self, PhysicsConfig};
-
-fn draw_box(color: &Point3<f32>, x: f32, y: f32, z: f32, window: &mut Window) {
-    window.draw_line(&Point3::new(0., 0., 0.), &Point3::new(x, 0., 0.), color);
-    window.draw_line(&Point3::new(0., 0., 0.), &Point3::new(0., y, 0.), color);
-    window.draw_line(&Point3::new(0., 0., 0.), &Point3::new(0., 0., z), color);
-    window.draw_line(&Point3::new(x, 0., 0.), &Point3::new(x, y, 0.), color);
-    window.draw_line(&Point3::new(x, 0., 0.), &Point3::new(x, 0., z), color);
-    window.draw_line(&Point3::new(x, y, 0.), &Point3::new(0., y, 0.), color);
-    window.draw_line(&Point3::new(x, y, 0.), &Point3::new(x, y, z), color);
-    window.draw_line(&Point3::new(0., y, 0.), &Point3::new(0., y, z), color);
-    window.draw_line(&Point3::new(0., 0., z), &Point3::new(x, 0., z), color);
-    window.draw_line(&Point3::new(0., 0., z), &Point3::new(0., y, z), color);
-    window.draw_line(&Point3::new(x, 0., z), &Point3::new(x, y, z), color);
-    window.draw_line(&Point3::new(x, y, z), &Point3::new(0., y, z), color);
-}
+use std::time::Instant;
 
 fn main() {
+    env_logger::init();
+
     let mut generator = StdRng::seed_from_u64(12);
     let physics_config = PhysicsConfig {
         time_step: 0.0016,
@@ -32,8 +22,8 @@ fn main() {
         max_z: 30.,
         sphere_radius: 1.,
     };
-    let max_velocity = 2.0;
-    let num_spheres = 100;
+    let max_velocity = 50.;
+    let num_spheres = 50;
     let mut physics_spheres = physics::get_random_physics_data(
         &mut generator,
         num_spheres,
@@ -44,7 +34,7 @@ fn main() {
         max_velocity,
         max_velocity,
     );
-    let mut window = Window::new("Kiss3d: cube");
+    let mut window = Window::new("rustplay");
     let mut rendered_spheres: Vec<_> = izip!(
         &physics_spheres.positions_x,
         &physics_spheres.positions_y,
@@ -61,17 +51,20 @@ fn main() {
     window.set_light(Light::StickToCamera);
 
     while window.render() {
-        draw_box(
+        graphics::draw_box(
             &Point3::new(0., 1., 0.),
             physics_config.max_x,
             physics_config.max_y,
             physics_config.max_z,
             &mut window,
         );
+        let physics_start = Instant::now();
         let mut simulated_time = 0.;
         while simulated_time < 0.016 {
-            simulated_time += physics::iter_take_time_step(&physics_config, &mut physics_spheres);
+            simulated_time +=
+                physics::iter_take_time_step(&physics_config, simulated_time, &mut physics_spheres);
         }
+        info!("Physics steps took {:#?}.", Instant::now() - physics_start);
         rendered_spheres = izip!(
             rendered_spheres,
             &physics_spheres.positions_x,
