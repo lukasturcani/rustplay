@@ -62,7 +62,7 @@ fn main() {
         let mut simulated_time = 0.;
         while simulated_time < 0.016 {
             simulated_time +=
-                physics::iter_take_time_step(&physics_config, simulated_time, &mut physics_spheres);
+                physics::exact_time_step(&physics_config, simulated_time, &mut physics_spheres);
         }
         info!("Physics steps took {:#?}.", Instant::now() - physics_start);
         rendered_spheres = izip!(

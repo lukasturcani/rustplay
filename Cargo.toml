@@ -18,6 +18,10 @@ panic = "abort"
 [profile.optimized-debug]
 inherits = "dev"
 opt-level = 3
+
+[profile.optimized-debug-max]
+inherits = "dev"
+opt-level = 3
 strip = false
 debug = true
 lto = true
