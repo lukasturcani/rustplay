@@ -8,7 +8,7 @@ use log::info;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rustplay::graphics;
-use rustplay::physics::{self, PhysicsConfig};
+use rustplay::physics::spheres::{self, PhysicsConfig};
 use std::time::Instant;
 
 fn main() {
@@ -24,7 +24,7 @@ fn main() {
     };
     let max_velocity = 50.;
     let num_spheres = 50;
-    let mut physics_spheres = physics::get_random_physics_data(
+    let mut physics_spheres = spheres::get_random_physics_data(
         &mut generator,
         num_spheres,
         physics_config.max_x,
@@ -62,7 +62,7 @@ fn main() {
         let mut simulated_time = 0.;
         while simulated_time < 0.016 {
             simulated_time +=
-                physics::exact_time_step(&physics_config, simulated_time, &mut physics_spheres);
+                spheres::exact_time_step(&physics_config, simulated_time, &mut physics_spheres);
         }
         info!("Physics steps took {:#?}.", Instant::now() - physics_start);
         rendered_spheres = izip!(
