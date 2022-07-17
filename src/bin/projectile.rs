@@ -23,12 +23,12 @@ fn main() {
 
     let physics_config = PhysicsConfig {
         time_step: 0.0016,
-        max_x: 30.,
-        max_y: 30.,
-        max_z: 30.,
+        max_x: 300.,
+        max_y: 300.,
+        max_z: 300.,
         sphere_radius: 1.,
     };
-    let mut physics_spheres = spheres::get_lattice((5, 5, 5), (15., 15., 15.));
+    let mut physics_spheres = spheres::get_lattice((2, 2, 2), (15., 15., 15.));
     add_projectile(&mut physics_spheres);
     let mut window = Window::new("rustplay");
     let mut rendered_spheres: Vec<_> = izip!(
@@ -43,6 +43,9 @@ fn main() {
         sphere
     })
     .collect();
+    if let Some(sphere) = rendered_spheres.last_mut() {
+        sphere.set_color(0., 1., 0.);
+    }
 
     window.set_light(Light::StickToCamera);
 
