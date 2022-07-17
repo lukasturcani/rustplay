@@ -1,6 +1,6 @@
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use rustplay::physics::{self, PhysicsConfig};
+use rustplay::physics::spheres::{self, PhysicsConfig};
 use std::ptr;
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
     };
     let max_velocity: f32 = 20.;
     let num_spheres = 350;
-    let mut physics_spheres = physics::get_random_physics_data(
+    let mut physics_spheres = spheres::get_random_physics_data(
         &mut generator,
         num_spheres,
         physics_config.max_x,
@@ -29,7 +29,7 @@ fn main() {
         let flag = true;
         let flag = ptr::read_volatile(&flag);
         while flag {
-            physics::mix_take_time_step(&physics_config, &mut physics_spheres);
+            spheres::mix_take_time_step(&physics_config, &mut physics_spheres);
         }
     }
     println!("{:#?}", physics_spheres);

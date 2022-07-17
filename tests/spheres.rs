@@ -4,7 +4,7 @@ use kiss3d::nalgebra::{Point3, Translation3};
 use kiss3d::scene::SceneNode;
 use kiss3d::window::Window;
 use rustplay::graphics;
-use rustplay::physics::{self, PhysicsConfig, PhysicsData};
+use rustplay::physics::spheres::{self, PhysicsConfig, PhysicsData};
 
 fn get_window() -> Window {
     let mut window = Window::new("rustplay");
@@ -49,7 +49,7 @@ fn physics_loop(
         let mut simulated_time = 0.;
         while simulated_time < 0.016 {
             simulated_time +=
-                physics::iter_take_time_step(physics_config, simulated_time, physics_spheres);
+                spheres::iter_take_time_step(physics_config, simulated_time, physics_spheres);
         }
         total_simulated_time += simulated_time;
         rendered_spheres = izip!(
