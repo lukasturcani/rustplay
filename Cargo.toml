@@ -15,16 +15,20 @@ lto = true
 codegen-units = 1
 panic = "abort"
 
-[profile.release-with-debug]
-inherits = "release"
+[profile.optimized-debug]
+inherits = "dev"
+opt-level = 3
 strip = false
 debug = true
+lto = true
+codegen-units = 1
+panic = "abort"
 
 [dependencies]
 kiss3d = "0.32"
 itertools = "0.10"
 rand = "0.8"
-log = "0.4.17"
+log = {version = "0.4.17", features = ["release_max_level_off"]}
 env_logger = "0.9.0"
 
 [dev-dependencies]
