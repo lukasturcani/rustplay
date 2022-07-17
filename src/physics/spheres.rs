@@ -1,6 +1,6 @@
 use super::common;
 use core::arch::x86_64;
-use itertools::izip;
+use itertools::{iproduct, izip};
 
 pub struct PhysicsConfig {
     pub time_step: f32,
@@ -52,15 +52,25 @@ pub fn get_random_physics_data(
     }
 }
 
-pub fn get_lattice(x: usize, y: usize, z: usize) -> PhysicsData {
-    PhysicsData {
-        positions_x: (0..x).map(|i| i as f32).collect(),
-        positions_y: (0..y).map(|i| i as f32).collect(),
-        positions_z: (0..z).map(|i| i as f32).collect(),
-        velocities_x: vec![0.; x],
-        velocities_y: vec![0.; y],
-        velocities_z: vec![0.; z],
+pub fn get_lattice(dimensions: (usize, usize, usize), offset: (f32, f32, f32)) -> PhysicsData {
+    let (x, y, z) = dimensions;
+    let (ox, oy, oz) = offset;
+    let lattice_size = x * y * z;
+    let mut lattice = PhysicsData {
+        positions_x: Vec::with_capacity(lattice_size),
+        positions_y: Vec::with_capacity(lattice_size),
+        positions_z: Vec::with_capacity(lattice_size),
+        velocities_x: vec![0.; lattice_size],
+        velocities_y: vec![0.; lattice_size],
+        velocities_z: vec![0.; lattice_size],
+    };
+    let diameter = 2.01;
+    for (x, y, z) in iproduct!(0..x, 0..y, 0..z) {
+        lattice.positions_x.push(ox + x as f32 * diameter);
+        lattice.positions_y.push(oy + y as f32 * diameter);
+        lattice.positions_z.push(oz + z as f32 * diameter);
     }
+    lattice
 }
 
 pub fn get_two_spheres(
