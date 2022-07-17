@@ -94,42 +94,6 @@ fn quadratic_root(a: f32, b: f32, c: f32) -> f32 {
     }
 }
 
-fn vector_sub(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32, f32) {
-    (x1 - x2, y1 - y2, z1 - z2)
-}
-
-fn vector_sub_((x1, y1, z1): (f32, f32, f32), (x2, y2, z2): (f32, f32, f32)) -> (f32, f32, f32) {
-    vector_sub(x1, y1, z1, x2, y2, z2)
-}
-
-fn vector_add(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32, f32) {
-    (x1 + x2, y1 + y2, z1 + z2)
-}
-
-fn vector_add_((x1, y1, z1): (f32, f32, f32), (x2, y2, z2): (f32, f32, f32)) -> (f32, f32, f32) {
-    vector_add(x1, y1, z1, x2, y2, z2)
-}
-
-fn vector_mul(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (f32, f32, f32) {
-    (x1 * x2, y1 * y2, z1 * z2)
-}
-
-fn vector_scalar_mul(scalar: f32, x: f32, y: f32, z: f32) -> (f32, f32, f32) {
-    (scalar * x, scalar * y, scalar * z)
-}
-
-fn vector_sum_((x, y, z): (f32, f32, f32)) -> f32 {
-    x + y + z
-}
-
-fn vector_dot(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> f32 {
-    vector_sum_(vector_mul(x1, y1, z1, x2, y2, z2))
-}
-
-fn vector_dot_((x1, y1, z1): (f32, f32, f32), (x2, y2, z2): (f32, f32, f32)) -> f32 {
-    vector_dot(x1, y1, z1, x2, y2, z2)
-}
-
 fn is_sphere_collision(
     r1: f32,
     px1: f32,
@@ -140,8 +104,8 @@ fn is_sphere_collision(
     py2: f32,
     pz2: f32,
 ) -> bool {
-    let diff = vector_sub(px2, py2, pz2, px1, py1, pz1);
-    let distance_squared = vector_dot_(diff, diff);
+    let diff = common::vector_sub(px2, py2, pz2, px1, py1, pz1);
+    let distance_squared = common::vector_dot_(diff, diff);
     let collision_distance = r1 + r2;
     distance_squared < collision_distance * collision_distance
 }
@@ -162,12 +126,12 @@ fn sphere_collision_time(
     vy2: f32,
     vz2: f32,
 ) -> f32 {
-    let p_diff = vector_sub(px2, py2, pz2, px1, py1, pz1);
-    let v_diff = vector_sub(vx2, vy2, vz2, vx1, vy1, vz1);
-    let distance_squared = vector_dot_(p_diff, p_diff);
-    let relative_speed_squared = vector_dot_(v_diff, v_diff);
+    let p_diff = common::vector_sub(px2, py2, pz2, px1, py1, pz1);
+    let v_diff = common::vector_sub(vx2, vy2, vz2, vx1, vy1, vz1);
+    let distance_squared = common::vector_dot_(p_diff, p_diff);
+    let relative_speed_squared = common::vector_dot_(v_diff, v_diff);
     let collision_distance = r1 + r2;
-    let half_b = vector_dot_(p_diff, v_diff);
+    let half_b = common::vector_dot_(p_diff, v_diff);
     let c = distance_squared - collision_distance * collision_distance;
     quadratic_root(relative_speed_squared, half_b + half_b, c)
 }
@@ -183,13 +147,19 @@ fn sphere_collision_response(
     vy2: &mut f32,
     vz2: &mut f32,
 ) {
-    let projection_magnitude1 = vector_dot(nx, ny, nz, *vx1, *vy1, *vz1);
-    let projection1 = vector_scalar_mul(projection_magnitude1, nx, ny, nz);
+    let projection_magnitude1 = common::vector_dot(nx, ny, nz, *vx1, *vy1, *vz1);
+    let projection1 = common::vector_scalar_mul(projection_magnitude1, nx, ny, nz);
 
-    let projection_magnitude2 = vector_dot(nx, ny, nz, *vx2, *vy2, *vz2);
-    let projection2 = vector_scalar_mul(projection_magnitude2, nx, ny, nz);
-    (*vx1, *vy1, *vz1) = vector_add_((*vx1, *vy1, *vz1), vector_sub_(projection2, projection1));
-    (*vx2, *vy2, *vz2) = vector_add_((*vx2, *vy2, *vz2), vector_sub_(projection1, projection2));
+    let projection_magnitude2 = common::vector_dot(nx, ny, nz, *vx2, *vy2, *vz2);
+    let projection2 = common::vector_scalar_mul(projection_magnitude2, nx, ny, nz);
+    (*vx1, *vy1, *vz1) = common::vector_add_(
+        (*vx1, *vy1, *vz1),
+        common::vector_sub_(projection2, projection1),
+    );
+    (*vx2, *vy2, *vz2) = common::vector_add_(
+        (*vx2, *vy2, *vz2),
+        common::vector_sub_(projection1, projection2),
+    );
 }
 
 pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32 {
@@ -271,7 +241,7 @@ pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32
             data.positions_y[first_collision.2] - data.positions_y[first_collision.1],
             data.positions_z[first_collision.2] - data.positions_z[first_collision.1],
         );
-        let distance = vector_dot_(displacement, displacement).sqrt();
+        let distance = common::vector_dot_(displacement, displacement).sqrt();
         let collision_normal = (
             displacement.0 / distance,
             displacement.1 / distance,
@@ -429,7 +399,7 @@ pub fn exact_time_step(config: &PhysicsConfig, simulated_time: f32, data: &mut P
             data.positions_y[collision.0.sphere2] - data.positions_y[collision.0.sphere1],
             data.positions_z[collision.0.sphere2] - data.positions_z[collision.0.sphere1],
         );
-        let distance = vector_dot_(displacement, displacement).sqrt();
+        let distance = common::vector_dot_(displacement, displacement).sqrt();
         let collision_normal = (
             displacement.0 / distance,
             displacement.1 / distance,
@@ -616,7 +586,7 @@ pub fn iter_take_time_step(
                     data.positions_y[collision.0.sphere2] - data.positions_y[collision.0.sphere1],
                     data.positions_z[collision.0.sphere2] - data.positions_z[collision.0.sphere1],
                 );
-                let distance = vector_dot_(displacement, displacement).sqrt();
+                let distance = common::vector_dot_(displacement, displacement).sqrt();
                 let collision_normal = (
                     displacement.0 / distance,
                     displacement.1 / distance,
@@ -746,7 +716,7 @@ pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f3
             data.positions_y[first_collision.2] - data.positions_y[first_collision.1],
             data.positions_z[first_collision.2] - data.positions_z[first_collision.1],
         );
-        let distance = vector_dot_(displacement, displacement).sqrt();
+        let distance = common::vector_dot_(displacement, displacement).sqrt();
         let collision_normal = (
             displacement.0 / distance,
             displacement.1 / distance,
@@ -864,53 +834,6 @@ fn iter_apply_bounds<'a>(
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn vector_mul() {
-        assert_eq!(super::vector_mul(1., 2., 3., 0., 0., 0.), (0., 0., 0.));
-        assert_eq!(super::vector_mul(1., 2., 3., 1., 1., 1.), (1., 2., 3.));
-    }
-    #[test]
-    fn vector_dot() {
-        assert_eq!(super::vector_dot(1., 2., 3., 1., 1., 1.), 6.);
-        assert_eq!(super::vector_dot(1., 2., 3., 0., 0., 0.), 0.);
-        assert_eq!(super::vector_dot(1., 2., 3., 1., 2., 3.), 14.);
-        assert_eq!(super::vector_dot(1., 2., 3., 4., 5., 6.), 32.);
-    }
-    #[test]
-    fn vector_dot_() {
-        assert_eq!(super::vector_dot_((1., 2., 3.), (1., 1., 1.)), 6.);
-        assert_eq!(super::vector_dot_((1., 2., 3.), (0., 0., 0.)), 0.);
-        assert_eq!(super::vector_dot_((1., 2., 3.), (1., 2., 3.)), 14.);
-        assert_eq!(super::vector_dot_((1., 2., 3.), (4., 5., 6.)), 32.);
-    }
-    #[test]
-    fn vector_sub() {
-        assert_eq!(super::vector_sub(1., 2., 3., 0., 0., 0.), (1., 2., 3.));
-        assert_eq!(super::vector_sub(1., 2., 3., 1., 2., 3.), (0., 0., 0.));
-    }
-    #[test]
-    fn vector_sub_() {
-        assert_eq!(super::vector_sub_((1., 2., 3.), (0., 0., 0.)), (1., 2., 3.));
-        assert_eq!(super::vector_sub_((1., 2., 3.), (1., 2., 3.)), (0., 0., 0.));
-    }
-    #[test]
-    fn vector_add() {
-        assert_eq!(super::vector_add(1., 2., 3., 0., 0., 0.), (1., 2., 3.));
-        assert_eq!(super::vector_add(1., 2., 3., 4., 5., 6.), (5., 7., 9.));
-    }
-    #[test]
-    fn vector_add_() {
-        assert_eq!(super::vector_add_((1., 2., 3.), (0., 0., 0.)), (1., 2., 3.));
-        assert_eq!(super::vector_add_((1., 2., 3.), (4., 5., 6.)), (5., 7., 9.));
-    }
-    #[test]
-    fn vector_sum_() {
-        assert_eq!(super::vector_sum_((1., 2., 3.)), 6.);
-    }
-    #[test]
-    fn vector_scalar_mul() {
-        assert_eq!(super::vector_scalar_mul(2., 1., 2., 3.), (2., 4., 6.));
-    }
     #[test]
     fn iter_apply_bounds() {
         let min = 0.;
