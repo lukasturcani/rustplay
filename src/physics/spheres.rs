@@ -52,6 +52,17 @@ pub fn get_random_physics_data(
     }
 }
 
+pub fn get_lattice(x: usize, y: usize, z: usize) -> PhysicsData {
+    PhysicsData {
+        positions_x: (0..x).map(|i| i as f32).collect(),
+        positions_y: (0..y).map(|i| i as f32).collect(),
+        positions_z: (0..z).map(|i| i as f32).collect(),
+        velocities_x: vec![0.; x],
+        velocities_y: vec![0.; y],
+        velocities_z: vec![0.; z],
+    }
+}
+
 pub fn get_two_spheres(
     position1: f32,
     position2: f32,
