@@ -8,7 +8,7 @@ use log::info;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rustplay::graphics;
-use rustplay::physics::spheres::{self, PhysicsConfig};
+use rustplay::physics::spheres::{self, PhysicsConfig, XYZ};
 use std::time::Instant;
 
 fn main() {
@@ -17,9 +17,11 @@ fn main() {
     let mut generator = StdRng::seed_from_u64(12);
     let physics_config = PhysicsConfig {
         time_step: 0.0016,
-        max_x: 30.,
-        max_y: 30.,
-        max_z: 30.,
+        box_size: XYZ {
+            x: 30.,
+            y: 30.,
+            z: 30.,
+        },
         sphere_radius: 1.,
     };
     let max_velocity = 50.;
@@ -27,9 +29,9 @@ fn main() {
     let mut physics_spheres = spheres::get_random_physics_data(
         &mut generator,
         num_spheres,
-        physics_config.max_x,
-        physics_config.max_y,
-        physics_config.max_z,
+        physics_config.box_size.x,
+        physics_config.box_size.y,
+        physics_config.box_size.z,
         max_velocity,
         max_velocity,
         max_velocity,
@@ -53,9 +55,9 @@ fn main() {
     while window.render() {
         graphics::draw_box(
             &Point3::new(0., 1., 0.),
-            physics_config.max_x,
-            physics_config.max_y,
-            physics_config.max_z,
+            physics_config.box_size.x,
+            physics_config.box_size.y,
+            physics_config.box_size.z,
             &mut window,
         );
         let physics_start = Instant::now();

@@ -3,11 +3,20 @@ use kiss3d::nalgebra::{Point3, Translation3};
 use kiss3d::light::Light;
 use kiss3d::window::Window;
 
+use clap::Parser;
 use itertools::izip;
 use log::info;
 use rustplay::graphics;
 use rustplay::physics::spheres::{self, PhysicsConfig, PhysicsData};
+use serde_dhall;
 use std::time::Instant;
+
+#[derive(Parser, Debug)]
+struct Args {
+    /// Path to the config file.
+    #[clap(value_parser)]
+    config: String,
+}
 
 fn add_projectile(physics_spheres: &mut PhysicsData) {
     physics_spheres.positions_x.push(5.);
@@ -18,16 +27,12 @@ fn add_projectile(physics_spheres: &mut PhysicsData) {
     physics_spheres.velocities_z.push(0.);
 }
 
-fn main() {
+fn main() -> Result<(), serde_dhall::Error> {
     env_logger::init();
 
-    let physics_config = PhysicsConfig {
-        time_step: 0.0016,
-        max_x: 300.,
-        max_y: 300.,
-        max_z: 300.,
-        sphere_radius: 1.,
-    };
+    let args = Args::parse();
+    let physics_config: PhysicsConfig = serde_dhall::from_file(args.config).parse()?;
+    info!("Running with config {:#?}", physics_config);
     let mut physics_spheres = spheres::get_lattice((2, 2, 2), (15., 15., 15.));
     add_projectile(&mut physics_spheres);
     let mut window = Window::new("rustplay");
@@ -52,9 +57,9 @@ fn main() {
     while window.render() {
         graphics::draw_box(
             &Point3::new(0., 1., 0.),
-            physics_config.max_x,
-            physics_config.max_y,
-            physics_config.max_z,
+            physics_config.box_size.x,
+            physics_config.box_size.y,
+            physics_config.box_size.z,
             &mut window,
         );
         let physics_start = Instant::now();
@@ -76,4 +81,5 @@ fn main() {
         })
         .collect();
     }
+    Ok(())
 }

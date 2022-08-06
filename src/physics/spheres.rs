@@ -1,12 +1,19 @@
 use super::common;
 use core::arch::x86_64;
 use itertools::{iproduct, izip};
+use serde::Deserialize;
 
+#[derive(Debug, Deserialize)]
+pub struct XYZ {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct PhysicsConfig {
     pub time_step: f32,
-    pub max_x: f32,
-    pub max_y: f32,
-    pub max_z: f32,
+    pub box_size: XYZ,
     pub sphere_radius: f32,
 }
 
@@ -289,20 +296,20 @@ pub fn mix_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f32
 
     loop_apply_bounds(
         0.,
-        config.max_x,
+        config.box_size.x,
         &mut data.velocities_x[..],
         &mut data.positions_x[..],
     );
 
     loop_apply_bounds(
         0.,
-        config.max_y,
+        config.box_size.y,
         &mut data.velocities_y[..],
         &mut data.positions_y[..],
     );
     loop_apply_bounds(
         0.,
-        config.max_z,
+        config.box_size.z,
         &mut data.velocities_z[..],
         &mut data.positions_z[..],
     );
@@ -444,19 +451,19 @@ pub fn exact_time_step(config: &PhysicsConfig, simulated_time: f32, data: &mut P
 
     iter_apply_bounds(
         0.,
-        config.max_x,
+        config.box_size.x,
         &mut data.velocities_x[..],
         &mut data.positions_x[..],
     );
     iter_apply_bounds(
         0.,
-        config.max_y,
+        config.box_size.y,
         &mut data.velocities_y[..],
         &mut data.positions_y[..],
     );
     iter_apply_bounds(
         0.,
-        config.max_z,
+        config.box_size.z,
         &mut data.velocities_z[..],
         &mut data.positions_z[..],
     );
@@ -645,19 +652,19 @@ pub fn iter_take_time_step(
 
     iter_apply_bounds(
         0.,
-        config.max_x,
+        config.box_size.x,
         &mut data.velocities_x[..],
         &mut data.positions_x[..],
     );
     iter_apply_bounds(
         0.,
-        config.max_y,
+        config.box_size.y,
         &mut data.velocities_y[..],
         &mut data.positions_y[..],
     );
     iter_apply_bounds(
         0.,
-        config.max_z,
+        config.box_size.z,
         &mut data.velocities_z[..],
         &mut data.positions_z[..],
     );
@@ -764,20 +771,20 @@ pub fn loop_take_time_step(config: &PhysicsConfig, data: &mut PhysicsData) -> f3
 
     loop_apply_bounds(
         0.,
-        config.max_x,
+        config.box_size.x,
         &mut data.velocities_x[..],
         &mut data.positions_x[..],
     );
 
     loop_apply_bounds(
         0.,
-        config.max_y,
+        config.box_size.y,
         &mut data.velocities_y[..],
         &mut data.positions_y[..],
     );
     loop_apply_bounds(
         0.,
-        config.max_z,
+        config.box_size.z,
         &mut data.velocities_z[..],
         &mut data.positions_z[..],
     );
@@ -879,9 +886,11 @@ mod tests {
     fn iter_take_time_step() {
         let physics_config = super::PhysicsConfig {
             time_step: 2.,
-            max_x: 70.,
-            max_y: 70.,
-            max_z: 70.,
+            box_size: super::XYZ {
+                x: 70.,
+                y: 70.,
+                z: 70.,
+            },
             sphere_radius: 1.,
         };
         let simulated_time = 0.;

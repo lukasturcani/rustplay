@@ -1,19 +1,19 @@
-use super::common;
-use itertools::izip;
+// use super::common;
+// use itertools::izip;
 
-pub struct PhysicsConfig {
-    time_step: f32,
-    cube_size: f32,
-}
+// pub struct PhysicsConfig {
+//     time_step: f32,
+//     cube_size: f32,
+// }
 
-struct CubeCollisionId {
-    cube1: usize,
-    cube2: usize,
-}
+// struct CubeCollisionId {
+//     cube1: usize,
+//     cube2: usize,
+// }
 
-struct CubeCollision {
-    time: f32,
-}
+// struct CubeCollision {
+//     time: f32,
+// }
 
 #[derive(Debug)]
 pub struct Quaternion {}
