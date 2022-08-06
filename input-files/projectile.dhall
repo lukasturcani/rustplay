@@ -1,9 +1,9 @@
-let XYZ = { x : Double, y : Double, z : Double }
+let XYZ = \(a : Type) -> { x : a, y : a, z : a }
 
 let PhysicsConfig =
-      { time_step : Double, box_size : XYZ, sphere_radius : Double }
+      { time_step : Double, box_size : XYZ Double, sphere_radius : Double }
 
-let LatticeConfig = { dimensions : XYZ, offset : XYZ }
+let LatticeConfig = { dimensions : XYZ Natural, offset : XYZ Double }
 
 let LogLevel = < Error | Warn | Info | Debug | Trace >
 
@@ -15,7 +15,7 @@ let config
         , sphere_radius = 1.0
         }
       , lattice =
-        { dimensions = { x = 2.0, y = 2.0, z = 2.0 }
+        { dimensions = { x = 2, y = 2, z = 2 }
         , offset = { x = 15.0, y = 15.0, z = 15.0 }
         }
       , log = LogLevel.Info

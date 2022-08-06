@@ -4,16 +4,16 @@ use itertools::{iproduct, izip};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct XYZ {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+pub struct XYZ<T> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PhysicsConfig {
     pub time_step: f32,
-    pub box_size: XYZ,
+    pub box_size: XYZ<f32>,
     pub sphere_radius: f32,
 }
 
